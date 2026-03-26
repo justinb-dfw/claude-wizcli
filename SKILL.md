@@ -7,7 +7,21 @@ description: Use when the user asks to "scan code", "scan directory", "scan cont
 
 # Wiz CLI Security Scanner
 
-Scan local code, directories, container images, and IaC files using wizcli with service account auth from `~/.wiz-token`.
+Scan local code, directories, container images, and IaC files using wizcli.
+
+## Authentication
+
+Two methods supported — the wrapper script auto-detects which to use:
+
+**Method 1: Service account (automatic, headless)**
+If `~/.wiz-token` exists, credentials are read and exported automatically. No user interaction needed.
+
+**Method 2: Device code OAuth (interactive)**
+If no `~/.wiz-token` exists, wizcli uses its cached session. If not authenticated, the user must run once manually:
+```bash
+~/.claude/skills/wizcli/wizcli auth --use-device-code
+```
+This opens a browser for Wiz login. The session is cached and reused for subsequent scans.
 
 ## Wrapper Script
 
@@ -79,14 +93,28 @@ Scan Infrastructure as Code files:
 
 ## Limitations
 
-- Binary is bundled at `~/.claude/skills/wizcli/wizcli` (v1.37.0, darwin-arm64)
-- Auth uses service account from `~/.wiz-token` (client credentials flow)
 - Large scans may take several minutes
 - `--no-publish` recommended for local development; omit to send results to Wiz portal
+- Device code OAuth requires a one-time browser login; service account auth is fully headless
+
+## Installing wizcli
+
+```bash
+# Apple Silicon Mac
+curl -Lo ~/.claude/skills/wizcli/wizcli https://downloads.wiz.io/v1/wizcli/latest/wizcli-darwin-arm64
+
+# Intel Mac
+curl -Lo ~/.claude/skills/wizcli/wizcli https://downloads.wiz.io/v1/wizcli/latest/wizcli-darwin-amd64
+
+# Linux x86_64
+curl -Lo ~/.claude/skills/wizcli/wizcli https://downloads.wiz.io/v1/wizcli/latest/wizcli-linux-amd64
+
+# Linux ARM64
+curl -Lo ~/.claude/skills/wizcli/wizcli https://downloads.wiz.io/v1/wizcli/latest/wizcli-linux-arm64
+
+chmod +x ~/.claude/skills/wizcli/wizcli
+```
 
 ## Updating wizcli
 
-```bash
-curl -Lo ~/.claude/skills/wizcli/wizcli https://downloads.wiz.io/v1/wizcli/latest/wizcli-darwin-arm64
-chmod +x ~/.claude/skills/wizcli/wizcli
-```
+Same as install — re-download the latest binary and `chmod +x`.

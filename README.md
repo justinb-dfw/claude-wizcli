@@ -1,6 +1,6 @@
 # Claude Code — Wiz CLI Skill
 
-Claude Code skill for local security scanning via Wiz CLI (`wizcli`). Scans code, directories, container images, and IaC files with service account authentication.
+Claude Code skill for local security scanning via Wiz CLI (`wizcli`). Scans code, directories, container images, and IaC files.
 
 ## What This Does
 
@@ -8,7 +8,15 @@ Bundles `wizcli` into a Claude Code skill so you can say "scan this directory fo
 
 ## Prerequisites
 
-- A `~/.wiz-token` file with your Wiz service account credentials:
+- A Wiz account with CLI access
+
+## Authentication
+
+Two methods are supported. The wrapper script auto-detects which to use.
+
+### Method 1: Service Account (headless, recommended for CI/automation)
+
+Create a `~/.wiz-token` file with your Wiz service account credentials:
 
 ```
 id:<your-client-id>
@@ -16,6 +24,18 @@ secret:<your-client-secret>
 api: https://api.<dc>.app.wiz.io/graphql
 auth:https://auth.app.wiz.io/oauth/token
 ```
+
+The wrapper reads this file automatically — no user interaction needed.
+
+### Method 2: Device Code OAuth (interactive, recommended for personal use)
+
+Run once to authenticate via browser:
+
+```bash
+~/.claude/skills/wizcli/wizcli auth --use-device-code
+```
+
+Follow the browser prompts to log in. The session is cached locally and reused for subsequent scans. No `~/.wiz-token` file needed.
 
 ## Installation
 
@@ -45,7 +65,16 @@ curl -Lo ~/.claude/skills/wizcli/wizcli https://downloads.wiz.io/v1/wizcli/lates
 chmod +x ~/.claude/skills/wizcli/wizcli
 ```
 
-### 3. Verify
+### 3. Authenticate (pick one)
+
+```bash
+# Option A: Service account — create ~/.wiz-token (see above)
+
+# Option B: Device code OAuth — one-time browser login
+~/.claude/skills/wizcli/wizcli auth --use-device-code
+```
+
+### 4. Verify
 
 ```bash
 ~/.claude/skills/wizcli/run-wizcli.sh version
@@ -74,6 +103,9 @@ Or invoke directly: `/wizcli`
 # IaC scan (Terraform, CloudFormation, K8s)
 ~/.claude/skills/wizcli/run-wizcli.sh scan iac --path <path>
 
+# Docker Compose scan
+~/.claude/skills/wizcli/run-wizcli.sh scan docker-compose --file <path>
+
 # Secrets only
 ~/.claude/skills/wizcli/run-wizcli.sh scan dir . --disabled-scanners=Vulnerability,Misconfiguration,SoftwareSupplyChain,AIModels,SAST,Malware --no-publish
 ```
@@ -89,12 +121,13 @@ Or invoke directly: `/wizcli`
 | File | Purpose |
 |------|---------|
 | `SKILL.md` | Skill definition — tells Claude when/how to use wizcli |
-| `run-wizcli.sh` | Wrapper script — reads `~/.wiz-token`, exports creds, runs wizcli |
+| `run-wizcli.sh` | Wrapper script — handles auth (service account or cached OAuth), runs wizcli |
 | `wizcli` | Binary (not in repo — download per install instructions above) |
 
 ## Updating wizcli
 
 ```bash
+# Re-download latest for your platform
 curl -Lo ~/.claude/skills/wizcli/wizcli https://downloads.wiz.io/v1/wizcli/latest/wizcli-darwin-arm64
 chmod +x ~/.claude/skills/wizcli/wizcli
 ```
@@ -103,4 +136,5 @@ chmod +x ~/.claude/skills/wizcli/wizcli
 
 - No credentials are stored in this repo
 - The `wizcli` binary is gitignored (327MB, download separately)
-- Credentials are read from `~/.wiz-token` at runtime
+- Service account credentials are read from `~/.wiz-token` at runtime
+- OAuth sessions are cached by wizcli in its own config directory
